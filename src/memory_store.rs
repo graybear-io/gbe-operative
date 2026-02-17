@@ -10,6 +10,12 @@ pub struct MemoryStateStore {
     data: Mutex<HashMap<String, Record>>,
 }
 
+impl Default for MemoryStateStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MemoryStateStore {
     pub fn new() -> Self {
         Self {

@@ -1,0 +1,23 @@
+v: 1
+name: "Daily Usage Report"
+job_type: "daily-usage-report"
+tasks:
+  - name: "fetch-data"
+    task_type: "data-fetch"
+    params:
+      source: "billing-api"
+      format: "csv"
+    timeout_secs: 120
+
+  - name: "transform"
+    task_type: "data-transform"
+    depends_on: ["fetch-data"]
+    params:
+      template: "usage-summary"
+
+  - name: "send-report"
+    task_type: "email-send"
+    depends_on: ["transform"]
+    params:
+      template: "daily-usage"
+      recipient_list_ref: "s3://config/recipients.json"
