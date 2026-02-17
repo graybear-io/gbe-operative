@@ -1,5 +1,5 @@
 use crate::error::RunnerError;
-use gbe_protocol::{ControlMessage, ToolInfo};
+use gbe_protocol::{ControlMessage, ToolId, ToolInfo};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
 
@@ -37,6 +37,25 @@ impl RouterClient {
         let msg = serde_json::from_str(line.trim())
             .map_err(gbe_protocol::ProtocolError::Json)?;
         Ok(msg)
+    }
+
+    /// Send the Connect handshake and wait for ConnectAck.
+    /// Must be called before any other messages — the router rejects
+    /// requests from clients that haven't connected.
+    pub async fn handshake(&mut self) -> Result<ToolId, RunnerError> {
+        self.send(&ControlMessage::Connect {
+            capabilities: vec![],
+        })
+        .await?;
+        match self.recv().await? {
+            ControlMessage::ConnectAck { tool_id, .. } => Ok(tool_id),
+            ControlMessage::Error { code, message } => {
+                Err(RunnerError::Router(format!("connect failed: {code}: {message}")))
+            }
+            other => Err(RunnerError::Router(format!(
+                "unexpected response to Connect: {other:?}"
+            ))),
+        }
     }
 
     /// Query all connected tools via the router.

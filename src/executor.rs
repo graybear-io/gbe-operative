@@ -76,8 +76,12 @@ impl TaskExecutor for EnvoyExecutor {
         task: &TaskDefinition,
         ctx: &TaskContext,
     ) -> Result<TaskResult, RunnerError> {
-        // 1. Snapshot existing tools
+        // 1. Connect and register with router
         let mut client = RouterClient::connect(&ctx.router_socket).await?;
+        let runner_id = client.handshake().await?;
+        debug!(runner_id = %runner_id, "registered with router");
+
+        // 2. Snapshot existing tools
         let before: Vec<ToolId> = client
             .query_tools()
             .await?
@@ -85,7 +89,7 @@ impl TaskExecutor for EnvoyExecutor {
             .map(|t| t.tool_id)
             .collect();
 
-        // 2. Build command and spawn adapter
+        // 3. Build command and spawn adapter
         let cmd_args = Self::build_command_args(task, ctx);
         debug!(task = %task.name, cmd = ?cmd_args, "spawning adapter");
 
@@ -100,7 +104,7 @@ impl TaskExecutor for EnvoyExecutor {
             .spawn()
             .map_err(|e| RunnerError::Other(format!("spawn adapter: {e}")))?;
 
-        // 3. Poll for new ToolId
+        // 4. Poll for new ToolId
         let new_tool_id = discover_new_tool(
             &mut client,
             &before,
@@ -111,7 +115,7 @@ impl TaskExecutor for EnvoyExecutor {
 
         info!(task = %task.name, tool_id = %new_tool_id, "discovered adapter tool");
 
-        // 4. Subscribe to the tool's data stream
+        // 5. Subscribe to the tool's data stream
         client
             .send(&ControlMessage::Subscribe {
                 target: new_tool_id.clone(),
@@ -135,10 +139,10 @@ impl TaskExecutor for EnvoyExecutor {
             }
         };
 
-        // 5. Read data frames until EOF
+        // 6. Read data frames until EOF
         let output = read_data_stream(&data_address).await?;
 
-        // 6. Wait for adapter exit code
+        // 7. Wait for adapter exit code
         let status = child.wait().await?;
         let exit_code = status.code().unwrap_or(1);
 
