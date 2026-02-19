@@ -1,10 +1,11 @@
 [package]
-name = "gbe-runner"
+name = "gbe-operative"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 gbe-jobs-domain = { path = "../gbe-nexus/crates/jobs-domain" }
+gbe-oracle = { path = "../gbe-oracle" }
 gbe-nexus = { path = "../gbe-nexus/crates/nexus" }
 gbe-nexus-memory = { path = "../gbe-nexus/crates/nexus-memory" }
 gbe-state-store = { path = "../gbe-nexus/crates/state-store" }

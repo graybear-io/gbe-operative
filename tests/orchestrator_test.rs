@@ -238,10 +238,10 @@ async fn integration_state_store_records_created() {
     use gbe_jobs_domain::{JobId, TaskId};
 
     let def = load_fixture();
-    let store = Arc::new(gbe_runner::MemoryStateStore::new());
+    let store = Arc::new(gbe_operative::MemoryStateStore::new());
     let transport: Arc<dyn gbe_nexus::Transport> =
         Arc::new(MemoryTransport::new(MemoryTransportConfig::default()));
-    let state_mgr = gbe_runner::NexusStateManager::new(store.clone(), transport);
+    let state_mgr = gbe_operative::NexusStateManager::new(store.clone(), transport);
 
     let job_id = JobId::new("job_test-integration").unwrap();
     let org_id = OrgId::new("org_test").unwrap();
@@ -257,7 +257,7 @@ async fn integration_state_store_records_created() {
         })
         .collect();
 
-    use gbe_runner::StateManager;
+    use gbe_operative::StateManager;
     state_mgr
         .create_job(&job_id, &org_id, &def, &task_ids)
         .await

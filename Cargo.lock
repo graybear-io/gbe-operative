@@ -203,16 +203,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gbe-protocol"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 1.0.69",
-]
-
-[[package]]
-name = "gbe-runner"
+name = "gbe-operative"
 version = "0.1.0"
 dependencies = [
  "async-trait",
@@ -221,6 +212,7 @@ dependencies = [
  "gbe-jobs-domain",
  "gbe-nexus",
  "gbe-nexus-memory",
+ "gbe-oracle",
  "gbe-protocol",
  "gbe-state-store",
  "serde",
@@ -231,6 +223,25 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "ulid",
+]
+
+[[package]]
+name = "gbe-oracle"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "gbe-jobs-domain",
+ "thiserror 2.0.18",
+ "tracing",
+]
+
+[[package]]
+name = "gbe-protocol"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 1.0.69",
 ]
 
 [[package]]

@@ -4,7 +4,7 @@
 //! Run with: cargo test --test e2e_test -- --ignored
 
 use gbe_protocol::{ControlMessage, DataFrame};
-use gbe_runner::router_client::RouterClient;
+use gbe_operative::router_client::RouterClient;
 use std::process::{Child, Command, Stdio};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::Duration;
