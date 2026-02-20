@@ -1,0 +1,33 @@
+v: 1
+name: "Molecule Pipeline"
+job_type: "molecule-test"
+tasks:
+  - name: "setup"
+    task_type: "shell"
+    params:
+      command: "echo ready"
+
+  - name: "inner-pipeline"
+    task_type: "molecule"
+    depends_on: ["setup"]
+    params:
+      definition: |
+        v: 1
+        name: "Inner Shell Pipeline"
+        job_type: "inner-shell"
+        tasks:
+          - name: "greet"
+            task_type: "shell"
+            params:
+              command: "echo hello from inner"
+          - name: "count"
+            task_type: "shell"
+            depends_on: ["greet"]
+            params:
+              command: "echo one; echo two"
+
+  - name: "finalize"
+    task_type: "shell"
+    depends_on: ["inner-pipeline"]
+    params:
+      command: "echo done"

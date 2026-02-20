@@ -1,6 +1,8 @@
 use clap::Parser;
 use gbe_jobs_domain::JobDefinition;
-use gbe_operative::{run_job, CompositeOperative, DriverError, HttpOperative, ShellOperative};
+use gbe_operative::{
+    run_job, CompositeOperative, DriverError, HttpOperative, MoleculeOperative, ShellOperative,
+};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
@@ -55,7 +57,18 @@ async fn main() -> ExitCode {
         }
     };
     let http = Arc::new(HttpOperative::for_types(&["http"]).unwrap());
-    let operative = Arc::new(CompositeOperative::from_operatives(vec![shell, http]));
+
+    // Two-phase construction: build shell+http as the molecule delegate,
+    // then build the final composite with all three including molecule.
+    let delegate: Arc<dyn gbe_operative::Operative> =
+        Arc::new(CompositeOperative::from_operatives(vec![
+            shell.clone(),
+            http.clone(),
+        ]));
+    let molecule = Arc::new(MoleculeOperative::for_types(&["molecule"], delegate).unwrap());
+    let operative = Arc::new(CompositeOperative::from_operatives(vec![
+        shell, http, molecule,
+    ]));
 
     match run_job(&def, operative).await {
         Ok(results) => {

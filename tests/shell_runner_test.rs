@@ -1,5 +1,7 @@
 use gbe_jobs_domain::JobDefinition;
-use gbe_operative::{run_job, CompositeOperative, DriverError, ShellOperative};
+use gbe_operative::{
+    run_job, CompositeOperative, DriverError, MoleculeOperative, ShellOperative,
+};
 use std::sync::Arc;
 
 fn load_fixture(name: &str) -> JobDefinition {
@@ -157,4 +159,35 @@ async fn cli_exits_nonzero_on_failure() {
         Some(1),
         "CLI should exit 1 on task failure"
     );
+}
+
+#[tokio::test]
+async fn molecule_runs_inner_shell_pipeline() {
+    let def = load_fixture("molecule.yaml");
+    let shell = Arc::new(ShellOperative::for_types(&["shell"]).unwrap());
+    let delegate: Arc<dyn gbe_operative::Operative> =
+        Arc::new(CompositeOperative::from_operatives(vec![shell.clone()]));
+    let molecule = Arc::new(MoleculeOperative::for_types(&["molecule"], delegate).unwrap());
+    let composite = Arc::new(CompositeOperative::from_operatives(vec![shell, molecule]));
+
+    let results = run_job(&def, composite).await.unwrap();
+
+    let mut names: Vec<String> = results.iter().map(|(n, _)| n.clone()).collect();
+    names.sort();
+    assert_eq!(names, vec!["finalize", "inner-pipeline", "setup"]);
+
+    // Verify molecule task produced aggregated data
+    let mol_outcome = results
+        .iter()
+        .find(|(n, _)| n == "inner-pipeline")
+        .unwrap();
+    match &mol_outcome.1 {
+        gbe_jobs_domain::TaskOutcome::Completed { data, output, .. } => {
+            assert_eq!(output.len(), 2); // greet + count
+            let data = data.as_ref().unwrap();
+            assert!(data.get("greet").is_some());
+            assert!(data.get("count").is_some());
+        }
+        _ => panic!("expected Completed"),
+    }
 }
