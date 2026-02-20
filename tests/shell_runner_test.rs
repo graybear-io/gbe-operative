@@ -1,5 +1,5 @@
 use gbe_jobs_domain::JobDefinition;
-use gbe_operative::{run_job, DriverError, ShellOperative};
+use gbe_operative::{run_job, CompositeOperative, DriverError, ShellOperative};
 use std::sync::Arc;
 
 fn load_fixture(name: &str) -> JobDefinition {
@@ -124,6 +124,19 @@ async fn input_wiring_resolves_across_tasks() {
         }
         _ => panic!("expected Completed"),
     }
+}
+
+#[tokio::test]
+async fn mixed_types_routed_through_composite() {
+    let def = load_fixture("mixed-types.yaml");
+    let shell = Arc::new(ShellOperative::for_types(&["shell"]).unwrap());
+    let cmd = Arc::new(ShellOperative::for_types(&["cmd"]).unwrap());
+    let composite = Arc::new(CompositeOperative::from_operatives(vec![shell, cmd]));
+
+    let results = run_job(&def, composite).await.unwrap();
+    let mut names: Vec<String> = results.iter().map(|(n, _)| n.clone()).collect();
+    names.sort();
+    assert_eq!(names, vec!["count", "greet"]);
 }
 
 #[tokio::test]

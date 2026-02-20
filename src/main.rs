@@ -1,6 +1,6 @@
 use clap::Parser;
 use gbe_jobs_domain::JobDefinition;
-use gbe_operative::{run_job, DriverError, ShellOperative};
+use gbe_operative::{run_job, CompositeOperative, DriverError, ShellOperative};
 use std::path::PathBuf;
 use std::process::ExitCode;
 use std::sync::Arc;
@@ -47,13 +47,14 @@ async fn main() -> ExitCode {
     info!(job = %def.name, tasks = def.tasks.len(), "loaded job definition");
 
     let types: Vec<&str> = cli.task_types.split(',').collect();
-    let operative = match ShellOperative::for_types(&types) {
+    let shell = match ShellOperative::for_types(&types) {
         Ok(op) => Arc::new(op),
         Err(e) => {
             error!(error = %e, "invalid task types");
             return ExitCode::from(2);
         }
     };
+    let operative = Arc::new(CompositeOperative::from_operatives(vec![shell]));
 
     match run_job(&def, operative).await {
         Ok(results) => {

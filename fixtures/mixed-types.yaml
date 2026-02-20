@@ -1,0 +1,14 @@
+v: 1
+name: "Mixed Types"
+job_type: "mixed"
+tasks:
+  - name: "greet"
+    task_type: "shell"
+    params:
+      command: "echo hello"
+
+  - name: "count"
+    task_type: "cmd"
+    depends_on: ["greet"]
+    params:
+      command: "echo 1 2 3"
