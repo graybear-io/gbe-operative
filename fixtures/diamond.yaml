@@ -1,0 +1,26 @@
+v: 1
+name: "Diamond DAG"
+job_type: "shell"
+tasks:
+  - name: "root"
+    task_type: "shell"
+    params:
+      command: "echo root"
+
+  - name: "left"
+    task_type: "shell"
+    depends_on: ["root"]
+    params:
+      command: "echo left"
+
+  - name: "right"
+    task_type: "shell"
+    depends_on: ["root"]
+    params:
+      command: "echo right"
+
+  - name: "join"
+    task_type: "shell"
+    depends_on: ["left", "right"]
+    params:
+      command: "echo joined"

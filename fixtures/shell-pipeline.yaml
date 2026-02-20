@@ -1,0 +1,20 @@
+v: 1
+name: "Shell Pipeline"
+job_type: "shell"
+tasks:
+  - name: "greet"
+    task_type: "shell"
+    params:
+      command: "echo hello from greet"
+
+  - name: "count"
+    task_type: "shell"
+    depends_on: ["greet"]
+    params:
+      command: "echo one; echo two; echo three"
+
+  - name: "summarize"
+    task_type: "shell"
+    depends_on: ["count"]
+    params:
+      command: "echo done"

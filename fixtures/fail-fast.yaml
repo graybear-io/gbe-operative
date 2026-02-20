@@ -1,0 +1,20 @@
+v: 1
+name: "Fail Fast"
+job_type: "shell"
+tasks:
+  - name: "setup"
+    task_type: "shell"
+    params:
+      command: "echo setup ok"
+
+  - name: "bad-step"
+    task_type: "shell"
+    depends_on: ["setup"]
+    params:
+      command: "exit 42"
+
+  - name: "should-not-run"
+    task_type: "shell"
+    depends_on: ["bad-step"]
+    params:
+      command: "echo this should never execute"
