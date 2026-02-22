@@ -1,7 +1,8 @@
 use clap::Parser;
 use gbe_jobs_domain::JobDefinition;
 use gbe_operative::{
-    run_job, CompositeOperative, DriverError, HttpOperative, MoleculeOperative, ShellOperative,
+    run_job, CompositeOperative, DriverError, HttpOperative, LlmOperative, MoleculeOperative,
+    ShellOperative,
 };
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -58,16 +59,24 @@ async fn main() -> ExitCode {
     };
     let http = Arc::new(HttpOperative::for_types(&["http"]).unwrap());
 
-    // Two-phase construction: build shell+http as the molecule delegate,
-    // then build the final composite with all three including molecule.
+    let llm_base_url =
+        std::env::var("LLM_API_URL").unwrap_or_else(|_| "https://api.openai.com".to_string());
+    let llm = Arc::new(LlmOperative::with_defaults(
+        vec![gbe_jobs_domain::TaskType::new("llm").unwrap()],
+        llm_base_url,
+    ));
+
+    // Two-phase construction: build shell+http+llm as the molecule delegate,
+    // then build the final composite with all four including molecule.
     let delegate: Arc<dyn gbe_operative::Operative> =
         Arc::new(CompositeOperative::from_operatives(&[
             shell.clone(),
             http.clone(),
+            llm.clone(),
         ]));
     let molecule = Arc::new(MoleculeOperative::for_types(&["molecule"], delegate).unwrap());
     let operative = Arc::new(CompositeOperative::from_operatives(&[
-        shell, http, molecule,
+        shell, http, llm, molecule,
     ]));
 
     match run_job(&def, operative).await {

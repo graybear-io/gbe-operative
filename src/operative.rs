@@ -12,6 +12,9 @@ pub enum OperativeError {
 
     #[error("io: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("LLM client: {0}")]
+    LlmClient(String),
 }
 
 /// The Operative executes tasks. It subscribes to one or more task types,

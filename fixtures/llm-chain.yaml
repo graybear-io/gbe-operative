@@ -1,0 +1,24 @@
+v: 1
+name: "LLM Chain"
+job_type: "llm"
+tasks:
+  - name: "draft"
+    task_type: "llm"
+    params:
+      model: "gpt-4o-mini"
+      system: "You are a concise technical writer."
+      prompt: "Write a one-sentence summary of Rust's ownership model."
+      temperature: "0.3"
+      max_tokens: "100"
+
+  - name: "critique"
+    task_type: "llm"
+    depends_on: ["draft"]
+    input_from:
+      draft_text: "draft.content"
+    params:
+      model: "gpt-4o-mini"
+      system: "You are a technical editor. Be brief."
+      prompt: "Critique this summary and suggest one improvement: ${draft_text}"
+      temperature: "0.5"
+      max_tokens: "150"

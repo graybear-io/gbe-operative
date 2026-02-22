@@ -1,0 +1,19 @@
+v: 1
+name: "LLM Pipeline"
+job_type: "mixed"
+tasks:
+  - name: "generate"
+    task_type: "llm"
+    params:
+      model: "gpt-4o-mini"
+      prompt: "List three colors, one per line."
+      temperature: "0.0"
+      max_tokens: "50"
+
+  - name: "post-process"
+    task_type: "shell"
+    depends_on: ["generate"]
+    input_from:
+      LLM_OUTPUT: "generate.content"
+    params:
+      command: "echo \"$LLM_OUTPUT\" | wc -l | tr -d ' '"
